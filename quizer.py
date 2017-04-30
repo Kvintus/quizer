@@ -22,13 +22,11 @@ class Quizer_obj(object):
             self.loadedSave.append(odpoved + '\n')
 
     def writeToFile(self, cesta):
-        print('Write To file')
         print(self.loaded)
         hlavnaCesta = cesta[0] + cesta[1]
         with open(hlavnaCesta, 'w') as file:
             for item in self.loadedSave:
                 file.write(item)
-                print('pisem....', 'item')
 
     # nacitavanie
     def loadList(self, cesta):
@@ -50,6 +48,12 @@ class Quizer_obj(object):
     def giveQuesRightPoint(self):
     	return self.quesRightPoints
 
+    def giveCurrentAnswer(self):
+        return self.currentAnswer
+
+    def giveLoadedSave(self):
+        return self.loadedSave
+
     def getPageList(self):
         bound = self.pageNum + 5
         chunked = []
@@ -59,12 +63,15 @@ class Quizer_obj(object):
         self.currentPage = chunked
         return chunked
 
-    def setCurrentAnswer(self):
+    def setCurrentAnswer(self, theAnswer):
+        self.currentAnswer = theAnswer
+        '''
         for item in self.currentPage:
             if item[3:] == "spr":
                 self.currentAnswer = item
+            print(item)
+        '''
 
     def compareAnswers(self, toCheck):
-        self.setCurrentAnswer()
         if toCheck == self.currentAnswer:
             self.quesRightPoints += 1

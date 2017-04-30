@@ -232,6 +232,7 @@ class Ui_Form(object):
         self.q_nextBtn.clicked.connect(self.q_nextBtnClicked)
         #VysPage
         self.doneBtn.clicked.connect(self.endThisSuffering)
+        self.anotherBtn.clicked.connect(self.continueThisTorure)
 
     # universal
     def setPage(self, pageNum):
@@ -254,14 +255,26 @@ class Ui_Form(object):
     def saveQuiz(self):
         if self.isPageFull():
             self.getInputPage()
-        file = QtWidgets.QFileDialog.getSaveFileName(
-            None, "Save file", "", ".quizer")
-        self.quizer.writeToFile(file)
-        self.setPage(0)
+        if not len(self.quizer.giveLoadedSave()):
+            self.setPage(0)
+            self.clearPage()
+        else:
+            buttonReply = QtWidgets.QMessageBox.question(None, 'Save ?', "Do you want to save this quizer file?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                self.realSave()
+            else:
+                self.setPage(0)
+
+            
+
+    def realSave(self):
+            file = QtWidgets.QFileDialog.getSaveFileName(
+                None, "Save file", "", ".quizer")
+            self.quizer.writeToFile(file)
+            self.setPage(0)
 
     def isPageFull(self):
         if self.zadOtazka.text() and self.zad1.text() and self.zad2.text() and self.zad3.text() and self.zad4.text():
-            print('ano')
             return True
         else:
             return False
@@ -273,7 +286,6 @@ class Ui_Form(object):
             page[2] = self.zad2.text()
             page[3] = self.zad3.text()
             page[4] = self.zad4.text()
-            print('r1')
 
         if self.r2.isChecked():
             page[1] = self.zad1.text()
@@ -293,7 +305,6 @@ class Ui_Form(object):
             page[3] = self.zad3.text()
             page[4] = "spr:" + self.zad4.text()
 
-        print(page)
         self.quizer.addToList(page)
         self.clearPage()
         self.quesNumLbl.setText(str(int(self.quesNumLbl.text()) + 1))
@@ -328,9 +339,10 @@ class Ui_Form(object):
         for item in range(len(chunkedQ)):
             if chunkedQ[item][:4] == "spr:":      #ak prve styri charaktery z itemu su 'spr:' tak je to spravne riesenie
                 chunkedQ[item] = chunkedQ[item][4:]
+                self.quizer.setCurrentAnswer(chunkedQ[item]) #automaticky nastavi aj ako odpoved na tejto strANE
 
-        print(chunkedQ)
         # loadovanie do radioButtonov
+        self.o1.setChecked(True)
         self.o1.setText(chunkedQ[1])
         self.o2.setText(chunkedQ[2])
         self.o3.setText(chunkedQ[3])
@@ -342,22 +354,32 @@ class Ui_Form(object):
 
 
     def chechIfLast(self): 
-        if int(self.quizer.giveCurrentPageNum()) + 1  == int(self.quizer.giveTotalQuesNum()):    #ze ci tato strana je posledna zo vsetkych
+        if int(self.quizer.giveCurrentPageNum()) == int(self.quizer.giveTotalQuesNum()):    #ze ci tato strana je posledna zo vsetkych
             return True
         else:
             return False
 
+    def findUsersAnswer(self):
+        if self.o1.isChecked():
+            self.quizer.compareAnswers(self.o1.text())
+        if self.o2.isChecked():
+            self.quizer.compareAnswers(self.o2.text())
+        if self.o3.isChecked():
+            self.quizer.compareAnswers(self.o3.text())
+        if self.o4.isChecked():
+            self.quizer.compareAnswers(self.o4.text())
 
     def q_nextBtnClicked(self):
+        self.findUsersAnswer()
         if self.chechIfLast():
-            print('im the last one')
             self.endingScreen()
         else:
             self.loadOnToPage()
 
     def endingScreen(self):
         self.setPage(3)
-        vysledok = self.quizer.giveQuesRightPoint() / self.quizer.giveTotalQuesNum() * 100 
+        vysledok = self.quizer.giveQuesRightPoint() / self.quizer.giveTotalQuesNum() * 100
+        self.vysLbl.setText(str(vysledok) + '%')
 
     def endThisSuffering(self):
         QtCore.QCoreApplication.instance().quit()
