@@ -1,7 +1,10 @@
+from cryptography.fernet import Fernet
 class Quizer_obj(object):
     # init
     def __init__(self):
         super(Quizer_obj, self).__init__()
+        #misc
+        self.heslo = "quizerFTW"
         # vytvaranie
         self.loadedSave = []
 
@@ -9,12 +12,25 @@ class Quizer_obj(object):
         self.totalQuesNum = 0
         self.quesRightPoints = 0
         self.loaded = []
+        self.loadedCrpt = []
         self.pageNum = 0
 
         # current
         self.currentPage = []
         self.currentAnswer = ""
         self.currentPageNum = 0
+
+    def encrypt(self, text):
+        cipher_key = b'k23xVyzUySfHReKUoqBDBChiD8kLCpBjIjTVlhKIlIA='
+        cipher = Fernet(cipher_key)
+        encrypted =  cipher.encrypt(text)
+        return str(encrypted)[2:-1]
+
+    def decypt(self, text):
+        cipher_key = b'k23xVyzUySfHReKUoqBDBChiD8kLCpBjIjTVlhKIlIA='
+        cipher = Fernet(cipher_key)
+        decrypted_text = cipher.decrypt(text)
+        return str(decrypted_text)[2:-1]
 
     # vytvaranie
     def addToList(self, listOdpov):
@@ -26,13 +42,20 @@ class Quizer_obj(object):
         hlavnaCesta = cesta[0] + cesta[1]
         with open(hlavnaCesta, 'w') as file:
             for item in self.loadedSave:
-                file.write(item)
+                file.write(str(self.encrypt(item.encode('utf8')))+'\n')
 
     # nacitavanie
     def loadList(self, cesta):
         hlavnaCesta = cesta[0]
         with open(hlavnaCesta, 'r') as file:
-            self.loaded = file.readlines()
+            self.loadedCrpt = file.read().splitlines()
+        
+
+        for item in self.loadedCrpt:
+            dec = str(self.decypt(item.encode('utf8')))[:-2]
+            print(dec)
+            self.loaded.append(dec)
+        
         self.totalQuesNum = len(self.loaded) / 5
 
     def setCurrentPageNum(self):
